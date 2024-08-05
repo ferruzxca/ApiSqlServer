@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "react-scripts start",
     "api": "nodemon src/index.js"
   },
   "keywords": [],

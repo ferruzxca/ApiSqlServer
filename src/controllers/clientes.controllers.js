@@ -24,28 +24,38 @@ export const getCliente = async (req, res) => {
 };
 
 export const createCliente = async (req, res) => {
-  console.log(req.body);
-  const pool = await getConnection();
-  const result = await pool
-    .request()
-    .input("Nombre", sql.NVarChar(100), req.body.Nombre)
-    .input("Apellido", sql.NVarChar(100), req.body.Apellido)
-    .input("CorreoElectronico", sql.NVarChar(100), req.body.CorreoElectronico)
-    .input("FechaNacimiento", sql.Date, req.body.FechaNacimiento)
-    .input("FechaRegistro", sql.DateTime, req.body.FechaRegistro)
-    .query(
-      "INSERT INTO Clientes (Nombre, Apellido, CorreoElectronico, FechaNacimiento, FechaRegistro) VALUES (@Nombre, @Apellido, @Correoelectronico, @FechaNacimiento, @FechaRegistro); SELECT SCOPE_IDENTITY() AS ClienteID;"
-    );
-  console.log(result);
-  res.json({
-    id: result.recordset[0].ClienteID,
-    Nombre: req.body.Nombre,
-    Apellido: req.body.Apellido,
-    CorreoElectronico: req.body.CorreoElectronico,
-    FechaNacimiento: req.body.FechaNacimiento,
-    FechaRegistro: req.body.FechaRegistro,
-  });
+  try {
+    console.log(req.body);
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input("Nombre", sql.NVarChar(100), req.body.Nombre)
+      .input("Apellido", sql.NVarChar(100), req.body.Apellido)
+      .input("CorreoElectronico", sql.NVarChar(100), req.body.CorreoElectronico)
+      .input("FechaNacimiento", sql.Date, req.body.FechaNacimiento)
+      .input("FechaRegistro", sql.DateTime, req.body.FechaRegistro)
+      .query(
+        "INSERT INTO Clientes (Nombre, Apellido, CorreoElectronico, FechaNacimiento, FechaRegistro) VALUES (@Nombre, @Apellido, @CorreoElectronico, @FechaNacimiento, @FechaRegistro); SELECT SCOPE_IDENTITY() AS ClienteID;"
+      );
+
+    console.log(result);
+
+    const ClienteID = result.recordset[0].ClienteID;
+
+    res.json({
+      ClienteID: ClienteID,
+      Nombre: req.body.Nombre,
+      Apellido: req.body.Apellido,
+      CorreoElectronico: req.body.CorreoElectronico,
+      FechaNacimiento: req.body.FechaNacimiento,
+      FechaRegistro: req.body.FechaRegistro,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al crear el cliente" });
+  }
 };
+
 
 export const updateCliente = async (req, res) => {
   const pool = await getConnection();
@@ -54,9 +64,9 @@ export const updateCliente = async (req, res) => {
     .input("ClienteID", sql.Int, req.params.id)
     .input("Nombre", sql.NVarChar(200), req.body.Nombre)
     .input("Apellido", sql.NVarChar(100), req.body.Apellido)
-    .input("CorreoElectronico", sql.Int, req.body.CorreoElectronico)
-    .input("FechaNacimineto", sql.Int, req.body.FechaNacimiento)
-    .input("FechaRegistro", sql.NVarChar(255), req.body.FechaRegistro)
+    .input("CorreoElectronico", sql.NVarChar(100), req.body.CorreoElectronico)
+    .input("FechaNacimiento", sql.Date, req.body.FechaNacimiento)
+    .input("FechaRegistro", sql.DateTime, req.body.FechaRegistro)
     .query(
       "UPDATE Clientes SET Nombre = @Nombre, Apellido = @Apellido, CorreoElectronico = @CorreoElectronico, FechaNacimiento = @FechaNacimiento, FechaRegistro = @FechaRegistro WHERE ClienteID = @ClienteID"
     );

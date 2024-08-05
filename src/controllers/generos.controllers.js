@@ -40,20 +40,29 @@ export const createGenero = async (req, res) => {
 };
 
 export const updateGenero = async (req, res) => {
-  const pool = await getConnection();
-  const result = await pool
-    .request()
-    .input("GeneroID", sql.Int, req.params.id)
-    .input("Nombre", sql.NVarChar(100), req.body.Nombre)
+  try {
+    const pool = await getConnection();
 
-    .query("UPDATE Generos SET Nombre = @Nombre WHERE GeneroID = @GeneroID");
+    const result = await pool
+      .request()
+      .input("OldGeneroID", sql.Int, req.params.id)
+      .input("NewGeneroID", sql.Int, req.body.NewGeneroID)
+      .input("Nombre", sql.NVarChar(100), req.body.Nombre)
+      .query("UPDATE Generos SET GeneroID = @NewGeneroID, Nombre = @Nombre WHERE GeneroID = @OldGeneroID");
 
-  console.log(result);
-  if (result.rowsAffected[0] === 0) {
-    return res.status(404).json({ message: "Genero no encontrado" });
+    console.log(result);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: "Género no encontrado" });
+    }
+
+    res.json({ message: "Género actualizado" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al actualizar el género" });
   }
-  res.json("Cliente Actualizado");
 };
+
 
 export const deleteGenero = async (req, res) => {
   const pool = await getConnection();

@@ -28,6 +28,7 @@ export const createPelicula = async (req, res) => {
   const pool = await getConnection();
   const result = await pool
     .request()
+    .input("PeliculaID", sql.Int, req.body.PeliculaID)
     .input("Titulo", sql.NVarChar(200), req.body.Titulo)
     .input("Director", sql.NVarChar(100), req.body.Director)
     .input("Anio", sql.Int, req.body.Anio)
@@ -35,11 +36,11 @@ export const createPelicula = async (req, res) => {
     .input("Sinopsis", sql.NVarChar(255), req.body.Sinopsis)
     .input("GeneroID", sql.Int, req.body.GeneroID)
     .query(
-      "INSERT INTO Peliculas (Titulo, Director, Anio, Duracion, Sinopsis, GeneroID) VALUES (@Titulo, @Director, @Anio, @Duracion, @Sinopsis, @GeneroID); SELECT SCOPE_IDENTITY() AS PeliculaID;"
+      "INSERT INTO Peliculas (PeliculaID,Titulo, Director, Anio, Duracion, Sinopsis, GeneroID) VALUES (@PeliculaID, @Titulo, @Director, @Anio, @Duracion, @Sinopsis, @GeneroID);"
     );
   console.log(result);
   res.json({
-    id: result.recordset[0].PeliculaID,
+    PeliculaID: req.body.PeliculaID,
     Titulo: req.body.Titulo,
     Director: req.body.Director,
     Anio: req.body.Anio,
@@ -68,7 +69,7 @@ export const updatePelicula = async (req, res) => {
   if (result.rowsAffected[0] === 0) {
     return res.status(404).json({ message: "Pelicula no encontrada" });
   }
-  res.json("Prlicula Actualizada");
+  res.json("Pelicula Actualizada");
 };
 
 export const deletePelicula = async (req, res) => {
@@ -88,15 +89,23 @@ export const deletePelicula = async (req, res) => {
 // Obtener películas historial
 export const getHistorialCliente = async (req, res) => {
   try {
+    const clienteId = parseInt(req.params.clienteId, 10);
+
+    if (isNaN(clienteId)) {
+      return res.status(400).json({ message: "ID de cliente inválido" });
+    }
+
     const pool = await getConnection();
     const result = await pool
       .request()
-      .input("ClienteID", sql.Int, req.params.clienteId).query(`
+      .input("ClienteID", sql.Int, clienteId)
+      .query(`
         SELECT c.Nombre, c.Apellido, p.Titulo, v.FechaVista
         FROM Clientes c
         JOIN Visualizaciones v ON c.ClienteID = v.ClienteID
         JOIN Peliculas p ON v.PeliculaID = p.PeliculaID
         WHERE c.ClienteID = @ClienteID
+        ORDER BY v.FechaVista DESC
       `);
 
     if (result.recordset.length === 0) {
@@ -140,61 +149,65 @@ export const getPeliculaMasVista = async (req, res) => {
   }
 };
 
-export const getTop10PeliculasMasVistas = async (req, res) => {
-  try {
-    const peliculaId = req.params.id;
-
-    // Check if the PeliculaID is a valid integer
-    if (isNaN(peliculaId)) {
-      return res.status(400).json({ message: "Invalid PeliculaID" });
-    }
-
-    const pool = await getConnection();
-    const result = await pool
-      .request()
-      .input("PeliculaID", sql.Int, parseInt(peliculaId, 10))
-      .query(
-        "SELECT TOP 10 p.Titulo, COUNT(*) AS Vistas FROM Visualizaciones v JOIN Peliculas p ON v.PeliculaID = p.PeliculaID GROUP BY p.Titulo ORDER BY Vistas DESC");
-
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ message: "Pelicula no encontrada" });
-    }
-
-    return res.json(result.recordset[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(error.message);
-  }
-};
-
-// Obtener top 10 películas menos vistas
-export const getTop10PeliculasMenosVistas = async (req, res) => {
-  try {
-    const pool = await getConnection();
-    const result = await pool.request().query(`
-        SELECT TOP 10 p.Titulo, COUNT(*) AS Vistas
-        FROM Visualizaciones v
-        JOIN Peliculas p ON v.PeliculaID = p.PeliculaID
-        GROUP BY p.Titulo
-        ORDER BY Vistas ASC
-      `);
-
-    if (result.recordset.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No se encontraron películas vistas" });
-    }
-
+// Top 10 Peliculas Mas Vistas
+export const getTop10MV = async (req, res) => {
+  const pool = await getConnection();
+  const result = await pool.request()
+    .query(`SELECT TOP 10
+          p.PeliculaID,
+          p.Titulo,
+          p.Director,
+          p.Anio,
+          p.Duracion,
+          p.Sinopsis,
+          COUNT(v.CantidadV) AS CantidadVisualizaciones
+      FROM 
+          Peliculas p
+      JOIN 
+          Visualizaciones v ON p.PeliculaID = v.PeliculaID
+      GROUP BY 
+          p.PeliculaID, 
+          p.Titulo, 
+          p.Director, 
+          p.Anio, 
+          p.Duracion, 
+          p.Sinopsis
+      ORDER BY 
+          CantidadVisualizaciones DESC;
+    `);
     res.json(result.recordset);
-  } catch (error) {
-    console.error(
-      "Error al obtener top 10 películas menos vistas:",
-      error.message
-    );
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
 };
 
+// Top 10 Peliculas Menos Vistas
+export const getTop10MenosV = async (req, res) => {
+    const pool = await getConnection();
+    const result = await pool.request()
+      .query(`SELECT TOP 10
+            p.PeliculaID,
+            p.Titulo,
+            p.Director,
+            p.Anio,
+            p.Duracion,
+            p.Sinopsis,
+            COUNT(v.CantidadV) AS CantidadVisualizaciones
+        FROM 
+            Peliculas p
+        JOIN 
+            Visualizaciones v ON p.PeliculaID = v.PeliculaID
+        GROUP BY 
+            p.PeliculaID, 
+            p.Titulo, 
+            p.Director, 
+            p.Anio, 
+            p.Duracion, 
+            p.Sinopsis
+        ORDER BY 
+            CantidadVisualizaciones ASC;
+      `);
+      res.json(result.recordset);
+};
+
+Ï
 // Obtener género más visto
 export const getGeneroMasVisto = async (req, res) => {
   try {
@@ -220,6 +233,7 @@ export const getGeneroMasVisto = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+
 
 // Obtener género menos visto
 export const getGeneroMenosVisto = async (req, res) => {
@@ -247,16 +261,19 @@ export const getGeneroMenosVisto = async (req, res) => {
   }
 };
 
+
 // Obtener los dos días con más visualizaciones de películas
 export const getDiasMasVistos = async (req, res) => {
   try {
     const pool = await getConnection();
     const result = await pool.request().query(`
-        SELECT TOP 2 CONVERT(date, FechaVista) AS Fecha, COUNT(*) AS Vistas
-        FROM Visualizaciones
-        GROUP BY CONVERT(date, FechaVista)
-        ORDER BY Vistas DESC
-      `);
+      SELECT TOP 2 
+        DATENAME(WEEKDAY, FechaVista) AS DiaDeLaSemana,  -- Obtener el nombre del día
+        COUNT(*) AS Vistas
+      FROM Visualizaciones
+      GROUP BY DATENAME(WEEKDAY, FechaVista) -- Agrupar por el nombre del día
+      ORDER BY Vistas DESC
+    `);
 
     if (result.recordset.length === 0) {
       return res
@@ -270,3 +287,4 @@ export const getDiasMasVistos = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+

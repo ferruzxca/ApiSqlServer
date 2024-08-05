@@ -2,11 +2,11 @@ import sql from "mssql";
 
 const dbSetting = {
   server: "localhost",
-  database: "FerruzFlix",
+  database: "Pelis",
   user: "sa",
   password: "Ferr2812$",
   options: {
-    encrypt: false,
+    encrypt: true,
     trustServerCertificate: true,
   },
 };
