@@ -140,31 +140,30 @@ export const getPeliculaMasVista = async (req, res) => {
   }
 };
 
-// Obtener top 10 películas más vistas
 export const getTop10PeliculasMasVistas = async (req, res) => {
   try {
-    const pool = await getConnection();
-    const result = await pool.request().query(`
-        SELECT TOP 10 p.Titulo, COUNT(*) AS Vistas
-        FROM Visualizaciones v
-        JOIN Peliculas p ON v.PeliculaID = p.PeliculaID
-        GROUP BY p.Titulo
-        ORDER BY Vistas DESC
-      `);
+    const peliculaId = req.params.id;
 
-    if (result.recordset.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No se encontraron películas vistas" });
+    // Check if the PeliculaID is a valid integer
+    if (isNaN(peliculaId)) {
+      return res.status(400).json({ message: "Invalid PeliculaID" });
     }
 
-    res.json(result.recordset);
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input("PeliculaID", sql.Int, parseInt(peliculaId, 10))
+      .query(
+        "SELECT TOP 10 p.Titulo, COUNT(*) AS Vistas FROM Visualizaciones v JOIN Peliculas p ON v.PeliculaID = p.PeliculaID GROUP BY p.Titulo ORDER BY Vistas DESC");
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ message: "Pelicula no encontrada" });
+    }
+
+    return res.json(result.recordset[0]);
   } catch (error) {
-    console.error(
-      "Error al obtener top 10 películas más vistas:",
-      error.message
-    );
-    res.status(500).json({ message: "Error interno del servidor" });
+    console.error(error);
+    res.status(500).send(error.message);
   }
 };
 

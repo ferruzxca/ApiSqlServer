@@ -11,6 +11,7 @@ import {
   getTop10PeliculasMenosVistas,
   getGeneroMenosVisto,
   getDiasMasVistos,
+  getHistorialCliente,
 
 } from "../controllers/peliculas.controllers.js";
 
@@ -23,11 +24,12 @@ router.put("/peliculas/:id", updatePelicula);
 router.delete("/peliculas/:id", deletePelicula);
 
 //Consultas Profesor
-router.get("/pelicula/MasVistas", getPeliculaMasVista);
-router.get("/peliculas/Top10MasVistas", getTop10PeliculasMasVistas);
+router.get("/pelicula/MasVista", getPeliculaMasVista);
+router.get("/peliculas/Top10peliculasMasVistas", getTop10PeliculasMasVistas);
 router.get("/genero/MasVisto", getGeneroMasVisto);
-router.get("/peliculas/Top10MenosVistas", getTop10PeliculasMenosVistas);
+router.get("/peliculas/Top10PeliculasMenosVistas", getTop10PeliculasMenosVistas);
 router.get("/genero/MenosVisto", getGeneroMenosVisto);
 router.get("/dias/MasVistos", getDiasMasVistos);
+router.get("/historial/cliente/:id", getHistorialCliente);
 
 export default router;
