@@ -203,7 +203,7 @@ export const getTop10MenosV = async (req, res) => {
   res.json(result.recordset);
 };
 
-Ï;
+
 // Obtener género más visto
 export const getGeneroMasVisto = async (req, res) => {
   try {
