@@ -96,9 +96,7 @@ export const getHistorialCliente = async (req, res) => {
     }
 
     const pool = await getConnection();
-    const result = await pool
-      .request()
-      .input("ClienteID", sql.Int, clienteId)
+    const result = await pool.request().input("ClienteID", sql.Int, clienteId)
       .query(`
         SELECT c.Nombre, c.Apellido, p.Titulo, v.FechaVista
         FROM Clientes c
@@ -152,8 +150,7 @@ export const getPeliculaMasVista = async (req, res) => {
 // Top 10 Peliculas Mas Vistas
 export const getTop10MV = async (req, res) => {
   const pool = await getConnection();
-  const result = await pool.request()
-    .query(`SELECT TOP 10
+  const result = await pool.request().query(`SELECT TOP 10
           p.PeliculaID,
           p.Titulo,
           p.Director,
@@ -175,14 +172,13 @@ export const getTop10MV = async (req, res) => {
       ORDER BY 
           CantidadVisualizaciones DESC;
     `);
-    res.json(result.recordset);
+  res.json(result.recordset);
 };
 
 // Top 10 Peliculas Menos Vistas
 export const getTop10MenosV = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request()
-      .query(`SELECT TOP 10
+  const pool = await getConnection();
+  const result = await pool.request().query(`SELECT TOP 10
             p.PeliculaID,
             p.Titulo,
             p.Director,
@@ -204,10 +200,10 @@ export const getTop10MenosV = async (req, res) => {
         ORDER BY 
             CantidadVisualizaciones ASC;
       `);
-      res.json(result.recordset);
+  res.json(result.recordset);
 };
 
-Ï
+Ï;
 // Obtener género más visto
 export const getGeneroMasVisto = async (req, res) => {
   try {
@@ -233,7 +229,6 @@ export const getGeneroMasVisto = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
-
 
 // Obtener género menos visto
 export const getGeneroMenosVisto = async (req, res) => {
@@ -261,7 +256,6 @@ export const getGeneroMenosVisto = async (req, res) => {
   }
 };
 
-
 // Obtener los dos días con más visualizaciones de películas
 export const getDiasMasVistos = async (req, res) => {
   try {
@@ -287,4 +281,3 @@ export const getDiasMasVistos = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
-
